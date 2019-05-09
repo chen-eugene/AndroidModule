@@ -1,0 +1,1 @@
+include ':app', ':core', ':loadsir', ':imageloader', ':aop',"core"
