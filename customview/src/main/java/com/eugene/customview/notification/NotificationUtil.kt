@@ -1,0 +1,203 @@
+package com.eugene.customview.notification
+
+import android.annotation.TargetApi
+import android.app.Activity
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.PRIORITY_DEFAULT
+import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
+import com.eugene.customview.R
+
+class NotificationUtil private constructor(base: Context) : ContextWrapper(base) {
+
+    val CHANNEL_ID = "default"
+    private val CHANNEL_NAME = "Default Channel"
+    private val CHANNEL_DESCRIPTION = "this is default channel!"
+
+    private val mManager by lazy {
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    }
+
+    companion object {
+        @Volatile
+        var instance: NotificationUtil? = null
+
+        fun getInstance(base: Context): NotificationUtil {
+            if (instance == null) {
+                synchronized(NotificationUtil::class) {
+                    if (instance == null) {
+                        instance = NotificationUtil(base.applicationContext)
+                    }
+                }
+            }
+            return instance!!
+        }
+    }
+
+    init {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel()
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_DEFAULT)
+        //是否绕过请勿打扰模式
+        channel.canBypassDnd()
+        //闪光灯
+        channel.enableLights(true)
+        //锁屏显示通知
+        channel.lockscreenVisibility = VISIBILITY_SECRET
+        //闪关灯的灯光颜色
+        channel.lightColor = Color.RED
+        //桌面launcher的消息角标
+        channel.canShowBadge()
+        //是否允许震动
+        channel.enableVibration(true)
+        //获取系统通知响铃声音的配置
+        channel.audioAttributes
+        //获取通知取到组
+        channel.group
+        //设置可绕过  请勿打扰模式
+        channel.setBypassDnd(true)
+        //设置震动模式
+        channel.vibrationPattern = longArrayOf(100, 100, 200)
+        //是否会有灯光
+        channel.shouldShowLights()
+        mManager.createNotificationChannel(channel)
+    }
+
+    private fun getNotification(title: String, content: String): NotificationCompat.Builder {
+        var builder: NotificationCompat.Builder?
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        } else {
+            builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            builder.priority = PRIORITY_DEFAULT
+        }
+        //标题
+        builder.setContentTitle(title)
+        //文本内容
+        builder.setContentText(content)
+        //小图标
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+        //设置点击信息后自动清除通知
+        builder.setAutoCancel(true)
+        return builder
+    }
+
+    private fun getNotification(title: String, content: String, intent: PendingIntent): NotificationCompat.Builder {
+        var builder: NotificationCompat.Builder? = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        } else {
+            builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            builder.priority = PRIORITY_DEFAULT
+        }
+        //标题
+        builder.setContentTitle(title)
+        //文本内容
+        builder.setContentText(content)
+        //小图标
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+        //设置点击信息后自动清除通知
+        builder.setAutoCancel(true)
+        //设置意图
+        builder.setContentIntent(intent)
+        return builder
+    }
+
+    /**
+     * 发送通知
+     */
+    fun sendNotification(title: String, content: String) {
+        val builder = getNotification(title, content)
+        mManager.notify(1, builder.build())
+    }
+
+    /**
+     * 发送通知
+     */
+    fun <T : Activity> sendNotificationIntentActivity(title: String, content: String, clazz: Class<T>) {
+        val intent = Intent(this, clazz)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        /**
+         * PendingIntent.FLAG_UPDATE_CURRENT:如果PendingIntent已经存在，保留它并且只替换它的extra数据。
+         * PendingIntent.FLAG_CANCEL_CURRENT:如果PendingIntent已经存在，那么当前的PendingIntent会取消掉，然后产生一个新的PendingIntent。
+         * PendingIntent.FLAG_ONE_SHOT:PendingIntent只能使用一次。调用了实例方法send()之后，它会被自动cancel掉，再次调用send()方法将失败。
+         * PendingIntent.FLAG_NO_CREATE:如果PendingIntent不存在，简单了当返回null。
+         */
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val builder = getNotification(title, content, pendingIntent)
+        mManager.notify(1, builder.build())
+    }
+
+    /**
+     * 发送通知
+     */
+    fun sendNotification(notifyId: Int, title: String, content: String) {
+        val builder = getNotification(title, content)
+        mManager.notify(notifyId, builder.build())
+    }
+
+    /**
+     * 发送带有进度的通知
+     */
+    fun sendNotificationProgress(title: String, content: String, progress: Int, intent: PendingIntent) {
+        val builder = getNotificationProgress(title, content, progress, intent)
+        mManager.notify(0, builder.build())
+    }
+
+    /**
+     * 获取带有进度的Notification
+     */
+    private fun getNotificationProgress(
+        title: String, content: String,
+        progress: Int, intent: PendingIntent
+    ): NotificationCompat.Builder {
+        var builder: NotificationCompat.Builder?
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        } else {
+            builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            builder.priority = PRIORITY_DEFAULT
+        }
+        //标题
+        builder.setContentTitle(title)
+        //文本内容
+        builder.setContentText(content)
+        //小图标
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+        //设置大图标，未设置时使用小图标代替，拉下通知栏显示的那个图标
+        //设置大图片 BitmpFactory.decodeResource(Resource res,int id) 根据给定的资源Id解析成位图
+        builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
+        if (progress in 1..99) {
+            //一种是有进度刻度的（false）,一种是循环流动的（true）
+            //设置为false，表示刻度，设置为true，表示流动
+            builder.setProgress(100, progress, false)
+        } else {
+            //0,0,false,可以将进度条隐藏
+            builder.setProgress(0, 0, false)
+            builder.setContentText("下载完成")
+        }
+        //设置点击信息后自动清除通知
+        builder.setAutoCancel(true)
+        //通知的时间
+        builder.setWhen(System.currentTimeMillis())
+        //设置点击信息后的跳转（意图）
+        builder.setContentIntent(intent)
+        return builder
+    }
+}
+

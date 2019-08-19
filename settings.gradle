@@ -1,1 +1,1 @@
-include ':app', ':core', ':loadsir', ':imageloader', ':aop',"core"
+include ':app', ':core', ':loadsir', ':imageloader', ':apt', ':customview', ':jni', ':aptcompiler', ':aptannotation', "core"

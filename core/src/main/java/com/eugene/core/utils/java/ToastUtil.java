@@ -7,8 +7,8 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.eugene.core.R;
 
-import com.example.core.R;
 
 /**
  * Toast工具类 2017.03.02修改
