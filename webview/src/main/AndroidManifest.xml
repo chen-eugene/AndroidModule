@@ -1,0 +1,28 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.eugene.webview">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <application android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity android:name=".WebViewActivity" />
+        <activity android:name=".WebOpenCameraActivity" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${APPLICATION_ID}.fileProvider"
+            android:grantUriPermissions="true"
+            android:exported="false">
+
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"/>
+
+        </provider>
+    </application>
+
+
+</manifest>

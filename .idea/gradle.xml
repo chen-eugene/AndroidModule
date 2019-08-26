@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/imageloader" />
             <option value="$PROJECT_DIR$/jni" />
             <option value="$PROJECT_DIR$/loadsir" />
+            <option value="$PROJECT_DIR$/webview" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
